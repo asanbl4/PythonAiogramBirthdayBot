@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  birthday_bot:
+    build: .
+    container_name: birthday_bot
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: db  # Use the service name defined in Docker Compose
+      DB_PORT: ${DB_PORT}
+      API_TOKEN: ${API_TOKEN}
+    volumes:
+      - .:/app
+    ports:
+      - "8443:8443"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

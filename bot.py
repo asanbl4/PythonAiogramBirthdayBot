@@ -1,26 +1,29 @@
+import os
+import asyncpg
+import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, FSInputFile
-import asyncpg
-import asyncio
-
-import filters
-import secret
-import messages
+from dotenv import load_dotenv
 import datetime
 
-DB_USER = secret.DB_USER
-DB_PASSWORD = secret.DB_PASSWORD
-DB_NAME = secret.DB_NAME
-DB_HOST = secret.DB_HOST
-DB_PORT = secret.DB_PORT
-API_TOKEN = secret.API_TOKEN
+import filters
+import messages
+
+
+load_dotenv()
+
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+API_TOKEN = os.getenv("API_TOKEN")
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 db_con_pool = None
-
 
 async def init_db():
     global db_con_pool
@@ -32,18 +35,14 @@ async def init_db():
         port=DB_PORT,
     )
 
-
 @dp.message(CommandStart())
 async def send_welcome(message: Message):
     await message.answer(f"Hi, {message.from_user.first_name}! This is the welcome message from aiogram!")
-
 
 @dp.message(Command('username'))
 async def send_username(message: Message):
     await message.answer(f'@{message.from_user.username}')
 
-
-# example@gmail.com
 @dp.message(filters.EmailFilter())
 async def show_student_info(message: Message):
     async with db_con_pool.acquire() as connection:
@@ -53,7 +52,6 @@ async def show_student_info(message: Message):
             await send_bd_message(message, student)
         else:
             await message.answer(f'No students with handle: {email} found in database')
-
 
 @dp.message(Command('today'))
 async def show_today_birthday(message: Message):
@@ -66,7 +64,6 @@ async def show_today_birthday(message: Message):
                     await send_bd_message(message, student)
         await bot.send_message(message.chat.id, "Request done")
 
-
 async def send_bd_message(message, student):
     message_text = await messages.birthday_message(student['first_name'])
     bd_image = FSInputFile('imgs/bd_image.jpg')
@@ -74,11 +71,9 @@ async def send_bd_message(message, student):
     await bot.send_message(message.chat.id,
                            f"{student['first_name']} {student['last_name']}\n@{student['handle']}")
 
-
 async def main():
     await init_db()
     await dp.start_polling(bot)
-
 
 if __name__ == '__main__':
     asyncio.run(main())
