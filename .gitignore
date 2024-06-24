@@ -1,6 +1,3 @@
 secret.py
 .env
 *.sql
-venv
-**/.idea/workspace.xml
-**/.idea/tasks.xml
